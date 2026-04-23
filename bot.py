@@ -1,7 +1,7 @@
 import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from gradio_client import Client
+from gradio_client import Client, handle_file
 import os
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
@@ -24,13 +24,12 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file = await context.bot.get_file(photo.file_id)
         await file.download_to_drive("temp_xray.jpg")
 
-        client = Client(HF_SPACE, httpx_kwargs={"timeout": 120})
+        client = Client(HF_SPACE)
         result = client.predict(
-            image="temp_xray.jpg",
+            image=handle_file("temp_xray.jpg"),
             api_name="/generate_report"
         )
 
-        # Split long messages for Telegram
         if len(result) > 4000:
             result = result[:4000]
 
